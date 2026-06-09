@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineManager Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1a56db;
+  --primary-dark:#1e429f;
+  --primary-light:#e8f0fe;
+  --primary-mid:#3b82f6;
+  --bg:#f0f4ff;
+  --surface:#ffffff;
+  --surface2:#f8faff;
+  --border:#dde6f8;
+  --border2:#c7d7f5;
+  --text:#0f172a;
+  --text2:#334155;
+  --muted:#64748b;
+  --muted2:#94a3b8;
+  --green:#059669;
+  --green-bg:#ecfdf5;
+  --red:#dc2626;
+  --red-bg:#fef2f2;
+  --gold:#d97706;
+  --gold-bg:#fffbeb;
+  --orange:#ea580c;
+  --orange-bg:#fff7ed;
+  --purple:#7c3aed;
+  --purple-bg:#f5f3ff;
+  --sidebar:240px;
+  --topbar:56px;
+  --radius:10px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:14px;min-height:100vh}
+
+/* ── LOGIN ── */
+#loginScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#1e429f 0%,#1a56db 50%,#3b82f6 100%);
+  display:flex;align-items:center;justify-content:center;padding:1rem;
+}
+.login-box{background:#fff;border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.login-logo{text-align:center;margin-bottom:1.5rem}
+.login-logo-icon{width:56px;height:56px;background:var(--primary);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 10px}
+.login-title{font-size:20px;font-weight:700;color:var(--text)}
+.login-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.login-field input{width:100%;padding:10px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:14px;outline:none;transition:border-color 0.15s;color:var(--text)}
+.login-field input:focus{border-color:var(--primary)}
+.login-btn{width:100%;padding:11px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.15s;margin-top:4px}
+.login-btn:hover{background:var(--primary-dark)}
+.login-error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:7px;padding:8px 12px;font-size:12px;margin-bottom:12px;display:none}
+.login-branch{font-size:11px;color:var(--muted2);text-align:center;margin-top:14px}
+
+/* ── APP SHELL ── */
+#app{display:none;min-height:100vh}
+
+/* SIDEBAR */
+#sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);
+  background:var(--primary-dark);
+  display:flex;flex-direction:column;z-index:200;
+  transition:transform 0.25s;overflow:hidden;
+}
+.sb-header{padding:1rem;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.sb-logo-icon{width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sb-logo-name{font-size:15px;font-weight:700;color:#fff}
+.sb-logo-tag{font-size:10px;color:rgba(255,255,255,0.5);margin-top:1px}
+
+.sb-branch{padding:8px 12px;margin:8px;background:rgba(255,255,255,0.08);border-radius:8px;border:1px solid rgba(255,255,255,0.12)}
+.sb-branch label{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px}
+.sb-branch select{width:100%;background:transparent;border:none;color:#fff;font-size:12px;font-weight:600;outline:none;cursor:pointer}
+.sb-branch select option{background:#1e3a8a;color:#fff}
+
+.sb-nav{flex:1;overflow-y:auto;padding:6px 8px}
+.sb-section-label{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.06em;padding:10px 8px 4px;font-weight:600}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.65);font-size:13px;font-weight:500;transition:all 0.15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left}
+.sb-item:hover{background:rgba(255,255,255,0.08);color:#fff}
+.sb-item.active{background:rgba(255,255,255,0.15);color:#fff;font-weight:600}
+.sb-item.active .sb-icon{opacity:1}
+.sb-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;opacity:0.7}
+.sb-badge{margin-left:auto;background:#dc2626;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px}
+
+.sb-footer{padding:10px;border-top:1px solid rgba(255,255,255,0.1);flex-shrink:0}
+.sb-user{display:flex;align-items:center;gap:8px}
+.sb-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-uname{font-size:12px;font-weight:600;color:#fff}
+.sb-urole{font-size:10px;color:rgba(255,255,255,0.5)}
+.sb-logout{margin-left:auto;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer}
+.sb-logout:hover{background:rgba(255,255,255,0.2);color:#fff}
+
+/* MAIN */
+#main{margin-left:var(--sidebar);display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+#topbar{
+  position:sticky;top:0;z-index:100;height:var(--topbar);
+  background:#fff;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 1.25rem;gap:12px;flex-wrap:nowrap;
+}
+.tb-title{font-size:15px;font-weight:700;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tb-select{padding:5px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;outline:none;cursor:pointer}
+.btn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-outline{background:#fff;border:1.5px solid var(--border2);color:var(--text2)}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.notif{width:34px;height:34px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;font-size:16px}
+.notif-dot{position:absolute;top:7px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--red)}
+
+/* CONTENT */
+#content{padding:1.25rem;flex:1}
+.page{display:none}
+.page.active{display:block}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:1.25rem}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--kc,var(--primary))}
+.kpi-lbl{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:4px}
+.kpi-val{font-size:22px;font-weight:700;letter-spacing:-0.5px;color:var(--text);line-height:1.1}
+.kpi-sub{font-size:11px;color:var(--muted2);margin-top:3px}
+.kpi-trend{font-size:11px;margin-top:2px;font-weight:500}
+.up{color:var(--green)}.down{color:var(--red)}
+
+/* CARDS */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem}
+.card-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:.9rem}
+.card+.card,.card+.grid-2,.grid-2+.card,.grid-3+.card{margin-top:10px}
+
+/* GRIDS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid-6040{display:grid;grid-template-columns:3fr 2fr;gap:10px}
+.grid-7030{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+
+/* CHART */
+.chart-wrap{position:relative;width:100%}
+
+/* TABLE */
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{padding:8px 10px;color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1.5px solid var(--border);text-align:left;white-space:nowrap;background:var(--surface2)}
+tbody td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2);white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--primary-light)}
+.td-r{text-align:right}.td-c{text-align:center}
+.tbl-actions{display:flex;gap:5px;justify-content:flex-end}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.b-green{background:var(--green-bg);color:var(--green)}
+.b-red{background:var(--red-bg);color:var(--red)}
+.b-gold{background:var(--gold-bg);color:var(--gold)}
+.b-blue{background:var(--primary-light);color:var(--primary)}
+.b-orange{background:var(--orange-bg);color:var(--orange)}
+.b-purple{background:var(--purple-bg);color:var(--purple)}
+.b-gray{background:#f1f5f9;color:var(--muted)}
+
+/* TABS */
+.tab-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.9rem}
+.tab{padding:5px 13px;font-size:12px;font-weight:500;border:1.5px solid var(--border2);background:#fff;color:var(--muted);border-radius:20px;cursor:pointer;transition:all 0.15s}
+.tab:hover{border-color:var(--primary);color:var(--primary)}
+.tab.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:11px;font-weight:600;color:var(--text2)}
+.fg input,.fg select,.fg textarea{padding:8px 10px;border:1.5px solid var(--border2);border-radius:7px;font-size:13px;color:var(--text);outline:none;background:#fff;transition:border-color 0.15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary)}
+.fg textarea{resize:vertical;min-height:72px}
+.form-actions{display:flex;gap:8px;padding-top:4px}
+
+/* PROGRESS */
+.prog-row{margin-bottom:8px}
+.prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:500}
+.prog-bg{background:var(--border);border-radius:4px;height:7px}
+.prog-fill{height:7px;border-radius:4px;transition:width 0.6s}
+
+/* STAT ROW */
+.stat-r{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.stat-r:last-child{border-bottom:none}
+.stat-l{color:var(--muted)}
+.stat-v{font-weight:600;color:var(--text)}
+
+/* INVOICE CARD */
+.inv-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.9rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.inv-left{flex:1;min-width:200px}
+.inv-num{font-size:11px;font-weight:700;color:var(--primary)}
+.inv-name{font-size:13px;font-weight:600;color:var(--text);margin:2px 0}
+.inv-meta{font-size:11px;color:var(--muted)}
+.inv-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.inv-amt{font-size:16px;font-weight:700;text-align:right}
+.inv-due{font-size:10px;color:var(--muted);text-align:right}
+
+/* USER MANAGEMENT */
+.user-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.9rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.user-av{width:38px;height:38px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.user-info{flex:1}
+.user-n{font-size:13px;font-weight:600;color:var(--text)}
+.user-r{font-size:11px;color:var(--muted);margin-top:1px}
+.user-status{display:flex;align-items:center;gap:8px}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:1rem 0}
+
+/* SECTION HEADER */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:8px}
+
+/* SCREEN FILTER */
+.branch-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem}
+.branch-tab{padding:5px 12px;font-size:12px;font-weight:500;border:1.5px solid var(--border2);background:#fff;color:var(--muted);border-radius:7px;cursor:pointer;transition:all 0.15s}
+.branch-tab.active{background:var(--primary-light);border-color:var(--primary);color:var(--primary);font-weight:600}
+
+/* MOBILE */
+#hamburger{display:none;position:fixed;top:12px;left:12px;z-index:300;background:var(--primary);border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:18px;color:#fff;line-height:1}
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:150}
+#overlay.show{display:block}
+
+/* ACCESS DENIED */
+.access-denied{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.access-denied .ad-icon{font-size:48px;margin-bottom:12px}
+.access-denied .ad-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+.access-denied .ad-sub{font-size:13px}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:1.5rem;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1}
+
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  #hamburger{display:block}
+  .grid-2,.grid-3,.grid-6040,.grid-7030{grid-template-columns:1fr}
+  .form-grid,.form-grid-3{grid-template-columns:1fr}
+  #topbar{padding:0 .75rem 0 3.5rem}
+}
+
+/* HIGHLIGHT */
+.hl-green{color:var(--green);font-weight:600}
+.hl-red{color:var(--red);font-weight:600}
+.hl-blue{color:var(--primary);font-weight:600}
+.hl-gold{color:var(--gold);font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">🎬</div>
+      <div class="login-title">CineManager Pro</div>
+      <div class="login-sub">Gobi · Vellakovil · Head Office</div>
+    </div>
+    <div class="login-error" id="loginError">Incorrect username or password.</div>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="Enter your username" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="Enter your password" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-branch">Cinema Financial Management System · v1.0</div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <button id="hamburger" onclick="toggleSidebar()">☰</button>
+  <div id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sb-header">
+      <div class="sb-logo-icon">🎬</div>
+      <div>
+        <div class="sb-logo-name">CineManager</div>
+        <div class="sb-logo-tag">Financial Hub</div>
+      </div>
+    </div>
+
+    <div class="sb-branch">
+      <label>Branch</label>
+      <select id="branchSel">
+        <option value="all">All Branches</option>
+        <option value="gobi">Gobi</option>
+        <option value="vella">Vellakovil</option>
+        <option value="hq">Head Office</option>
+      </select>
+    </div>
+
+    <div class="sb-nav" id="sbNav">
+      <!-- filled by JS based on role -->
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-avatar" id="sbAvatar">?</div>
+        <div>
+          <div class="sb-uname" id="sbUname">—</div>
+          <div class="sb-urole" id="sbUrole">—</div>
+        </div>
+        <button class="sb-logout" onclick="doLogout()">Sign out</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <div class="tb-title" id="tbTitle">Dashboard</div>
+      <div class="tb-right">
+        <select class="tb-select" id="periodSel">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly" selected>Monthly</option>
+        </select>
+        <select class="tb-select" id="monthSel">
+          <option value="8">August 2025</option>
+          <option value="9">September 2025</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="exportCSV()">⬇ Export</button>
+        <div class="notif">🔔<div class="notif-dot"></div></div>
+      </div>
+    </div>
+
+    <div id="content">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="page active" id="page-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--primary)"><div class="kpi-lbl">Total Revenue</div><div class="kpi-val">₹32.4L</div><div class="kpi-sub">All branches · Aug 2025</div><div class="kpi-trend up">↑ 12% vs July</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Box Office</div><div class="kpi-val">₹23.1L</div><div class="kpi-sub">4,820 tickets sold</div><div class="kpi-trend up">↑ 8%</div></div>
+          <div class="kpi" style="--kc:#f59e0b"><div class="kpi-lbl">Concessions</div><div class="kpi-val">₹8.7L</div><div class="kpi-sub">F&B + Online</div><div class="kpi-trend up">↑ 15%</div></div>
+          <div class="kpi" style="--kc:var(--red)"><div class="kpi-lbl">Distributor Due</div><div class="kpi-val">₹9.8L</div><div class="kpi-sub">3 pending</div><div class="kpi-trend down">Action needed</div></div>
+          <div class="kpi" style="--kc:var(--orange)"><div class="kpi-lbl">Pending Invoices</div><div class="kpi-val">₹2.3L</div><div class="kpi-sub">3 overdue</div><div class="kpi-trend down">↑ Urgent</div></div>
+          <div class="kpi" style="--kc:var(--purple)"><div class="kpi-lbl">Parking</div><div class="kpi-val">₹61K</div><div class="kpi-sub">Monthly total</div><div class="kpi-trend up">↑ 5%</div></div>
+        </div>
+
+        <div class="grid-7030" style="margin-bottom:10px">
+          <div class="card">
+            <div class="sec-hdr">
+              <div class="card-title" style="margin:0">Revenue Trend</div>
+              <div class="tab-row" style="margin:0">
+                <button class="tab active" onclick="switchDashChart('line',this)">Line</button>
+                <button class="tab" onclick="switchDashChart('bar',this)">Bar</button>
+                <button class="tab" onclick="switchDashChart('stack',this)">Split</button>
+              </div>
+            </div>
+            <div class="chart-wrap" style="height:230px"><canvas id="dashChart" role="img" aria-label="Revenue trend"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Revenue Mix</div>
+            <div class="chart-wrap" style="height:150px"><canvas id="dashPie" role="img" aria-label="Revenue mix"></canvas></div>
+            <div style="margin-top:12px">
+              <div class="prog-row"><div class="prog-lbl"><span>Box Office</span><span>71%</span></div><div class="prog-bg"><div class="prog-fill" style="width:71%;background:var(--primary)"></div></div></div>
+              <div class="prog-row"><div class="prog-lbl"><span>Concessions</span><span>27%</span></div><div class="prog-bg"><div class="prog-fill" style="width:27%;background:#f59e0b"></div></div></div>
+              <div class="prog-row"><div class="prog-lbl"><span>Parking</span><span>2%</span></div><div class="prog-bg"><div class="prog-fill" style="width:2%;background:var(--purple)"></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-title">Branch Performance</div>
+            <div class="stat-r"><span class="stat-l">Gobi</span><span class="stat-v hl-blue">₹13.2L</span></div>
+            <div class="stat-r"><span class="stat-l">Vellakovil</span><span class="stat-v">₹10.8L</span></div>
+            <div class="stat-r"><span class="stat-l">Head Office</span><span class="stat-v">₹8.4L</span></div>
+            <div class="divider"></div>
+            <div class="stat-r"><span class="stat-l">Avg Occupancy</span><span class="stat-v hl-green">68%</span></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Pending Actions</div>
+            <div class="stat-r"><span class="stat-l">Overdue invoices</span><span class="stat-v hl-red">3</span></div>
+            <div class="stat-r"><span class="stat-l">POs awaiting</span><span class="stat-v hl-gold">2</span></div>
+            <div class="stat-r"><span class="stat-l">Distributor dues</span><span class="stat-v hl-red">3</span></div>
+            <div class="stat-r"><span class="stat-l">Vendor bills due</span><span class="stat-v">5</span></div>
+            <div class="stat-r"><span class="stat-l">Salary pending</span><span class="stat-v hl-gold">1</span></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Top Films</div>
+            <div class="stat-r"><span class="stat-l">Film A</span><span class="stat-v">₹8.2L</span></div>
+            <div class="stat-r"><span class="stat-l">Film B</span><span class="stat-v">₹6.1L</span></div>
+            <div class="stat-r"><span class="stat-l">Film C</span><span class="stat-v">₹4.9L</span></div>
+            <div class="stat-r"><span class="stat-l">Film D</span><span class="stat-v">₹3.8L</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SALES & BOX OFFICE ── -->
+      <div class="page" id="page-sales">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--primary)"><div class="kpi-lbl">Gross Box Office</div><div class="kpi-val">₹23.1L</div><div class="kpi-sub">Aug 2025</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Tickets Sold</div><div class="kpi-val">4,820</div><div class="kpi-sub">All shows</div></div>
+          <div class="kpi" style="--kc:#f59e0b"><div class="kpi-lbl">Avg Ticket Price</div><div class="kpi-val">₹479</div><div class="kpi-sub">Per ticket</div></div>
+          <div class="kpi" style="--kc:var(--orange)"><div class="kpi-lbl">Occupancy</div><div class="kpi-val">68%</div><div class="kpi-sub">All branches</div></div>
+        </div>
+        <div class="branch-tabs">
+          <button class="branch-tab active">All Branches</button>
+          <button class="branch-tab">Gobi</button>
+          <button class="branch-tab">Vellakovil</button>
+          <button class="branch-tab">Head Office</button>
+        </div>
+        <div class="grid-7030" style="margin-bottom:10px">
+          <div class="card">
+            <div class="card-title">Daily Box Office</div>
+            <div class="chart-wrap" style="height:220px"><canvas id="salesChart" role="img" aria-label="Daily box office"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Collection Method</div>
+            <div class="chart-wrap" style="height:140px"><canvas id="salesPie" role="img" aria-label="Collection method"></canvas></div>
+            <div style="margin-top:10px">
+              <div class="stat-r"><span class="stat-l">Cash</span><span class="stat-v">₹7.2L (31%)</span></div>
+              <div class="stat-r"><span class="stat-l">Card / UPI</span><span class="stat-v">₹9.8L (42%)</span></div>
+              <div class="stat-r"><span class="stat-l">Paytm / QR</span><span class="stat-v">₹6.1L (27%)</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec-hdr">
+            <div class="card-title" style="margin:0">Sales Register</div>
+            <button class="btn btn-primary btn-sm" onclick="openModal('addSaleModal')">+ Add Entry</button>
+          </div>
+          <div class="tbl-scroll">
+            <table>
+              <thead><tr><th>Date</th><th>Branch</th><th>Show</th><th>Film</th><th>Tickets</th><th>Cash</th><th>Card</th><th>Online</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td>14 Aug</td><td>Gobi</td><td>Morning</td><td>Film A</td><td>180</td><td>₹32,400</td><td>₹28,800</td><td>₹24,300</td><td class="hl-blue">₹85,500</td><td><span class="badge b-green">Reconciled</span></td><td><div class="tbl-actions"><button class="btn btn-outline btn-sm">Edit</button></div></td></tr>
+                <tr><td>14 Aug</td><td>Vellakovil</td><td>Afternoon</td><td>Film B</td><td>140</td><td>₹18,200</td><td>₹15,400</td><td>₹12,600</td><td class="hl-blue">₹46,200</td><td><span class="badge b-green">Reconciled</span></td><td><div class="tbl-actions"><button class="btn btn-outline btn-sm">Edit</button></div></td></tr>
+                <tr><td>15 Aug</td><td>Gobi</td><td>Evening</td><td>Film A</td><td>210</td><td>₹42,000</td><td>₹35,700</td><td>₹28,350</td><td class="hl-blue">₹1,06,050</td><td><span class="badge b-gold">Pending</span></td><td><div class="tbl-actions"><button class="btn btn-outline btn-sm">Edit</button></div></td></tr>
+                <tr><td>15 Aug</td><td>Head Office</td><td>Night</td><td>Film C</td><td>95</td><td>₹12,350</td><td>₹9,500</td><td>₹7,600</td><td class="hl-blue">₹29,450</td><td><span class="badge b-green">Reconciled</span></td><td><div class="tbl-actions"><button class="btn btn-outline btn-sm">Edit</button></div></td></tr>
+                <tr><td>16 Aug</td><td>Vellakovil</td><td>Morning</td><td>Film D</td><td>88</td><td>₹11,440</td><td>₹8,800</td><td>₹7,040</td><td class="hl-blue">₹27,280</td><td><span class="badge b-red">Review</span></td><td><div class="tbl-actions"><button class="btn btn-outline btn-sm">Edit</button></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CONCESSIONS ── -->
+      <div class="page" id="page-concessions">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--primary)"><div class="kpi-lbl">Total F&B Revenue</div><div class="kpi-val">₹8.7L</div><div class="kpi-sub">Aug 2025</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Counter Sales</div><div class="kpi-val">₹5.2L</div><div class="kpi-sub">60% of F&B</div></div>
+          <div class="kpi" style="--kc:#f59e0b"><div class="kpi-lbl">Online Orders</div><div class="kpi-val">₹2.1L</div><div class="kpi-sub">Zomato + Swiggy</div></div>
+          <div class="kpi" style="--kc:var(--orange)"><div class="kpi-lbl">Web Sales</div><div class="kpi-val">₹1.4L</div><div class="kpi-sub">Cinema website</div></div>
+        </div>
+        <div class="grid-7030" style="margin-bottom:10px">
+          <div class="card">
+            <div class="card-title">Daily F&B Revenue</div>
+            <div class="chart-wrap" style="height:220px"><canvas id="conChart" role="img" aria-label="Daily concessions"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Channel Split</div>
+            <div class="chart-wrap" style="height:140px"><canvas id="conPie" role="img" aria-label="Concession channels"></canvas></div>
+            <div style="margin-top:10px">
+              <div class="stat-r"><span class="stat-l">Counter</span><span class="stat-v">₹5.2L</span></div>
+              <div class="stat-r"><span class="stat-l">Zomato</span><span class="stat-v">₹1.1L</span></div>
+              <div class="stat-r"><span class="stat-l">Swiggy</span><span class="stat-v">₹1.0L</span></div>
+              <div class="stat-r"><span class="stat-l">Web</span><span class="stat-v">₹1.4L</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec-hdr"><div class="card-title" style="margin:0">F&B Daily Register</div><button class="btn btn-primary btn-sm">+ Add Entry</button></div>
+          <div class="tbl-scroll"><table>
+            <thead><tr><th>Date</th><th>Branch</th><th>Counter</th><th>Zomato</th><th>Swiggy</th><th>Web</th><th>Total</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>14 Aug</td><td>Gobi</td><td>₹34,550</td><td>₹1,230</td><td>₹0</td><td>₹1,490</td><td class="hl-blue">₹37,270</td><td><span class="badge b-green">Done</span></td></tr>
+              <tr><td>15 Aug</td><td>Vellakovil</td><td>₹1,00,620</td><td>₹970</td><td>₹0</td><td>₹3,080</td><td class="hl-blue">₹1,04,670</td><td><span class="badge b-green">Done</span></td></tr>
+              <tr><td>16 Aug</td><td>Head Office</td><td>₹1,24,830</td><td>₹1,730</td><td>₹0</td><td>₹3,770</td><td class="hl-blue">₹1,30,330</td><td><span class="badge b-gold">Pending</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── PARKING ── -->
+      <div class="page" id="page-parking">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--purple)"><div class="kpi-lbl">Monthly Revenue</div><div class="kpi-val">₹61,040</div><div class="kpi-sub">Aug 2025</div></div>
+          <div class="kpi" style="--kc:var(--primary)"><div class="kpi-lbl">Daily Average</div><div class="kpi-val">₹1,969</div><div class="kpi-sub">Per day</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Phone Pe</div><div class="kpi-val">₹58,530</div><div class="kpi-sub">Digital</div></div>
+          <div class="kpi" style="--kc:#f59e0b"><div class="kpi-lbl">Peak Day</div><div class="kpi-val">₹4,130</div><div class="kpi-sub">Aug 14</div></div>
+        </div>
+        <div class="card" style="margin-bottom:10px">
+          <div class="card-title">Daily Parking Collection</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="parkChart" role="img" aria-label="Parking collection"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="sec-hdr"><div class="card-title" style="margin:0">Parking Register</div><button class="btn btn-primary btn-sm">+ Add Entry</button></div>
+          <div class="tbl-scroll"><table>
+            <thead><tr><th>Date</th><th>Branch</th><th>Cash</th><th>Phone Pe</th><th>Total</th><th>Notes</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>14 Aug</td><td>Gobi</td><td>₹0</td><td>₹4,130</td><td class="hl-blue">₹4,130</td><td>Weekend</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+              <tr><td>15 Aug</td><td>Gobi</td><td>₹0</td><td>₹4,020</td><td class="hl-blue">₹4,020</td><td>Weekend</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+              <tr><td>16 Aug</td><td>Vellakovil</td><td>₹0</td><td>₹2,680</td><td class="hl-blue">₹2,680</td><td>Saturday</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── DISTRIBUTOR ── -->
+      <div class="page" id="page-distributor">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--red)"><div class="kpi-lbl">Total Payable</div><div class="kpi-val">₹9.8L</div><div class="kpi-sub">Revenue share due</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Paid</div><div class="kpi-val">₹5.2L</div><div class="kpi-sub">3 distributors</div></div>
+          <div class="kpi" style="--kc:#f59e0b"><div class="kpi-lbl">Avg Share %</div><div class="kpi-val">38%</div><div class="kpi-sub">Of net BO</div></div>
+          <div class="kpi" style="--kc:var(--orange)"><div class="kpi-lbl">Overdue</div><div class="kpi-val">₹4.6L</div><div class="kpi-sub">2 distributors</div></div>
+        </div>
+        <div class="grid-7030" style="margin-bottom:10px">
+          <div class="card">
+            <div class="card-title">Revenue Share by Film</div>
+            <div class="chart-wrap" style="height:220px"><canvas id="distChart" role="img" aria-label="Distributor chart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Payment Status</div>
+            <div class="chart-wrap" style="height:140px"><canvas id="distPie" role="img" aria-label="Distributor payment status"></canvas></div>
+            <div style="margin-top:10px">
+              <div class="stat-r"><span class="stat-l">Paid</span><span class="stat-v hl-green">₹5.2L</span></div>
+              <div class="stat-r"><span class="stat-l">Pending</span><span class="stat-v hl-gold">₹3.1L</span></div>
+              <div class="stat-r"><span class="stat-l">Overdue</span><span class="stat-v hl-red">₹1.5L</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec-hdr"><div class="card-title" style="margin:0">Distributor Payment Register</div><button class="btn btn-primary btn-sm">+ Record Payment</button></div>
+          <div class="tbl-scroll"><table>
+            <thead><tr><th>Film</th><th>Distributor</th><th>Branch</th><th>Gross BO</th><th>Share %</th><th>Due</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Film A</td><td>Dist Co. 1</td><td>Gobi</td><td>₹8,20,000</td><td>40%</td><td>₹3,28,000</td><td>₹3,28,000</td><td class="hl-green">₹0</td><td><span class="badge b-green">Paid</span></td></tr>
+              <tr><td>Film B</td><td>Dist Co. 2</td><td>Vellakovil</td><td>₹6,10,000</td><td>35%</td><td>₹2,13,500</td><td>₹1,00,000</td><td class="hl-gold">₹1,13,500</td><td><span class="badge b-gold">Partial</span></td></tr>
+              <tr><td>Film C</td><td>Dist Co. 3</td><td>Gobi</td><td>₹4,90,000</td><td>38%</td><td>₹1,86,200</td><td>₹0</td><td class="hl-red">₹1,86,200</td><td><span class="badge b-red">Overdue</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── ADVERTISING & VPF ── -->
+      <div class="page" id="page-advertising">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--purple)"><div class="kpi-lbl">Ad Revenue</div><div class="kpi-val">₹3.8L</div><div class="kpi-sub">This month</div></div>
+          <div class="kpi" style="--kc:var(--primary)"><div class="kpi-lbl">VPF Collected</div><div class="kpi-val">₹1.1L</div><div class="kpi-sub">3 distributors</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Active Campaigns</div><div class="kpi-val">7</div><div class="kpi-sub">On-screen ads</div></div>
+          <div class="kpi" style="--kc:var(--red)"><div class="kpi-lbl">VPF Pending</div><div class="kpi-val">₹20,000</div><div class="kpi-sub">1 pending</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="sec-hdr"><div class="card-title" style="margin:0">Advertisement Register</div><button class="btn btn-primary btn-sm">+ Add</button></div>
+            <div class="tbl-scroll"><table>
+              <thead><tr><th>Advertiser</th><th>Type</th><th>Branch</th><th>Period</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Brand A</td><td>Pre-show</td><td>All</td><td>Aug 1–31</td><td>₹95,000</td><td><span class="badge b-green">Active</span></td></tr>
+                <tr><td>Brand B</td><td>Interval</td><td>Gobi</td><td>Aug 15–31</td><td>₹48,000</td><td><span class="badge b-green">Active</span></td></tr>
+                <tr><td>Brand C</td><td>Slide</td><td>All</td><td>Sep 1–30</td><td>₹60,000</td><td><span class="badge b-blue">Upcoming</span></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+          <div class="card">
+            <div class="sec-hdr"><div class="card-title" style="margin:0">VPF Register</div><button class="btn btn-primary btn-sm">+ Add</button></div>
+            <div class="tbl-scroll"><table>
+              <thead><tr><th>Distributor</th><th>Film</th><th>Weeks</th><th>Total VPF</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Dist Co. 1</td><td>Film A</td><td>4</td><td>₹40,000</td><td><span class="badge b-green">Received</span></td></tr>
+                <tr><td>Dist Co. 2</td><td>Film B</td><td>3</td><td>₹30,000</td><td><span class="badge b-green">Received</span></td></tr>
+                <tr><td>Dist Co. 3</td><td>Film C</td><td>2</td><td>₹20,000</td><td><span class="badge b-red">Pending</span></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PURCHASE ORDERS ── -->
+      <div class="page" id="page-po">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--primary)"><div class="kpi-lbl">Total POs</div><div class="kpi-val">14</div><div class="kpi-sub">Aug 2025</div></div>
+          <div class="kpi" style="--kc:#f59e0b"><div class="kpi-lbl">Awaiting Approval</div><div class="kpi-val">2</div><div class="kpi-sub">Pending review</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Approved</div><div class="kpi-val">10</div><div class="kpi-sub">This month</div></div>
+          <div class="kpi" style="--kc:var(--orange)"><div class="kpi-lbl">Total Value</div><div class="kpi-val">₹8.9L</div><div class="kpi-sub">Aug 2025</div></div>
+        </div>
+        <div class="card" style="margin-bottom:10px">
+          <div class="sec-hdr"><div class="card-title" style="margin:0">Purchase Order Register</div><button class="btn btn-primary btn-sm" onclick="openModal('addPOModal')">+ New PO</button></div>
+          <div class="tbl-scroll"><table>
+            <thead><tr><th>PO No.</th><th>Vendor</th><th>Branch</th><th>Category</th><th>Amount</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>PO-2025-041</td><td>Popcorn Suppliers</td><td>All</td><td>F&B</td><td>₹48,500</td><td>Aug 1</td><td><span class="badge b-green">Approved</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              <tr><td>PO-2025-042</td><td>Beverage Co.</td><td>All</td><td>F&B</td><td>₹32,000</td><td>Aug 3</td><td><span class="badge b-green">Approved</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              <tr><td>PO-2025-044</td><td>Tech Supplies</td><td>All</td><td>Equipment</td><td>₹75,000</td><td>Aug 8</td><td><span class="badge b-gold">Pending</span></td><td><button class="btn btn-primary btn-sm">Approve</button></td></tr>
+              <tr><td>PO-2025-045</td><td>Office Needs</td><td>Head Office</td><td>Admin</td><td>₹12,000</td><td>Aug 10</td><td><span class="badge b-gold">Pending</span></td><td><button class="btn btn-primary btn-sm">Approve</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Create New Purchase Order</div>
+          <div class="form-grid">
+            <div class="fg"><label>PO Number</label><input type="text" placeholder="PO-2025-XXX"></div>
+            <div class="fg"><label>Vendor Name</label><input type="text" placeholder="Vendor name"></div>
+          </div>
+          <div class="form-grid-3">
+            <div class="fg"><label>Branch</label><select><option>All Branches</option><option>Gobi</option><option>Vellakovil</option><option>Head Office</option></select></div>
+            <div class="fg"><label>Category</label><select><option>F&B</option><option>Equipment</option><option>Maintenance</option><option>Admin</option><option>Other</option></select></div>
+            <div class="fg"><label>Amount (₹)</label><input type="number" placeholder="0"></div>
+          </div>
+          <div class="form-grid">
+            <div class="fg"><label>Required By</label><input type="date"></div>
+            <div class="fg"><label>Description</label><input type="text" placeholder="Items / purpose"></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary">Submit PO</button><button class="btn btn-outline">Clear</button></div>
+        </div>
+      </div>
+
+      <!-- ── PURCHASES ── -->
+      <div class="page" id="page-purchases">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Total Purchases</div><div class="kpi-val">₹7.2L</div><div class="kpi-sub">Aug 2025</div></div>
+          <div class="kpi" style="--kc:var(--primary)"><div class="kpi-lbl">F&B</div><div class="kpi-val">₹2.8L</div><div class="kpi-sub">39%</div></div>
+          <div class="kpi" style="--kc:var(--orange)"><div class="kpi-lbl">Equipment</div><div class="kpi-val">₹2.1L</div><div class="kpi-sub">29%</div></div>
+          <div class="kpi" style="--kc:var(--purple)"><div class="kpi-lbl">Maintenance</div><div class="kpi-val">₹1.8L</div><div class="kpi-sub">25%</div></div>
+        </div>
+        <div class="grid-7030" style="margin-bottom:10px">
+          <div class="card">
+            <div class="card-title">Purchases by Category</div>
+            <div class="chart-wrap" style="height:220px"><canvas id="purchChart" role="img" aria-label="Purchases chart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Breakdown</div>
+            <div class="prog-row"><div class="prog-lbl"><span>F&B</span><span>39%</span></div><div class="prog-bg"><div class="prog-fill" style="width:39%;background:var(--primary)"></div></div></div>
+            <div class="prog-row"><div class="prog-lbl"><span>Equipment</span><span>29%</span></div><div class="prog-bg"><div class="prog-fill" style="width:29%;background:var(--orange)"></div></div></div>
+            <div class="prog-row"><div class="prog-lbl"><span>Maintenance</span><span>25%</span></div><div class="prog-bg"><div class="prog-fill" style="width:25%;background:var(--purple)"></div></div></div>
+            <div class="prog-row"><div class="prog-lbl"><span>Admin</span><span>7%</span></div><div class="prog-bg"><div class="prog-fill" style="width:7%;background:var(--muted2)"></div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec-hdr"><div class="card-title" style="margin:0">Purchases Ledger</div><button class="btn btn-primary btn-sm">+ Add</button></div>
+          <div class="tbl-scroll"><table>
+            <thead><tr><th>Date</th><th>Vendor</th><th>Branch</th><th>Item</th><th>Category</th><th>Amount</th><th>PO Ref</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Aug 1</td><td>Popcorn Suppliers</td><td>All</td><td>Popcorn, Oil</td><td>F&B</td><td>₹48,500</td><td>PO-041</td><td><span class="badge b-green">Received</span></td></tr>
+              <tr><td>Aug 3</td><td>Beverage Co.</td><td>All</td><td>Drinks, Water</td><td>F&B</td><td>₹32,000</td><td>PO-042</td><td><span class="badge b-green">Received</span></td></tr>
+              <tr><td>Aug 8</td><td>Tech Supplies</td><td>All</td><td>Projector bulbs</td><td>Equipment</td><td>₹75,000</td><td>PO-044</td><td><span class="badge b-gold">Ordered</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── VENDOR PAYMENTS ── -->
+      <div class="page" id="page-vendors">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--red)"><div class="kpi-lbl">Total Payable</div><div class="kpi-val">₹6.4L</div><div class="kpi-sub">All vendors</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Paid This Month</div><div class="kpi-val">₹9.1L</div><div class="kpi-sub">12 payments</div></div>
+          <div class="kpi" style="--kc:#f59e0b"><div class="kpi-lbl">Active Vendors</div><div class="kpi-val">18</div><div class="kpi-sub">Registered</div></div>
+          <div class="kpi" style="--kc:var(--orange)"><div class="kpi-lbl">Due This Week</div><div class="kpi-val">₹1.8L</div><div class="kpi-sub">5 payments</div></div>
+        </div>
+        <div class="card">
+          <div class="sec-hdr"><div class="card-title" style="margin:0">Vendor Payment Register</div><button class="btn btn-primary btn-sm">+ Record Payment</button></div>
+          <div class="tbl-scroll"><table>
+            <thead><tr><th>Vendor</th><th>Branch</th><th>Category</th><th>Invoice No.</th><th>Amount</th><th>Due Date</th><th>Paid Date</th><th>Mode</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Popcorn Suppliers</td><td>All</td><td>F&B</td><td>PS-4421</td><td>₹48,500</td><td>Aug 10</td><td>—</td><td>—</td><td><span class="badge b-red">Overdue</span></td></tr>
+              <tr><td>Beverage Co.</td><td>All</td><td>F&B</td><td>BC-2201</td><td>₹32,000</td><td>Aug 20</td><td>—</td><td>—</td><td><span class="badge b-gold">Due Soon</span></td></tr>
+              <tr><td>Cleaning Services</td><td>All</td><td>Housekeeping</td><td>CS-881</td><td>₹92,000</td><td>Aug 12</td><td>—</td><td>—</td><td><span class="badge b-red">Overdue</span></td></tr>
+              <tr><td>Electricals India</td><td>Gobi</td><td>Maintenance</td><td>EI-334</td><td>₹1,25,000</td><td>Aug 25</td><td>Aug 22</td><td>NEFT</td><td><span class="badge b-green">Paid</span></td></tr>
+              <tr><td>Security Agency</td><td>All</td><td>Security</td><td>SA-112</td><td>₹75,000</td><td>Aug 31</td><td>Aug 30</td><td>Cheque</td><td><span class="badge b-green">Paid</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── INVOICE MANAGEMENT ── -->
+      <div class="page" id="page-invoices">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--red)"><div class="kpi-lbl">Overdue</div><div class="kpi-val">₹2.3L</div><div class="kpi-sub">3 invoices</div></div>
+          <div class="kpi" style="--kc:#f59e0b"><div class="kpi-lbl">Pending Approval</div><div class="kpi-val">₹4.1L</div><div class="kpi-sub">6 invoices</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Paid This Month</div><div class="kpi-val">₹11.2L</div><div class="kpi-sub">14 invoices</div></div>
+          <div class="kpi" style="--kc:var(--primary)"><div class="kpi-lbl">Total Invoices</div><div class="kpi-val">23</div><div class="kpi-sub">Aug 2025</div></div>
+        </div>
+        <div class="tab-row">
+          <button class="tab active">All (23)</button>
+          <button class="tab">Overdue (3)</button>
+          <button class="tab">Pending (6)</button>
+          <button class="tab">Paid (14)</button>
+        </div>
+        <div id="invoiceList">
+          <div class="inv-item">
+            <div class="inv-left"><div class="inv-num">INV-2025-081</div><div class="inv-name">Popcorn Suppliers Ltd</div><div class="inv-meta">Concessions · Overdue 15 days · All Branches</div></div>
+            <div class="inv-right"><span class="badge b-red">Overdue</span><div><div class="inv-amt hl-red">₹48,500</div><div class="inv-due">Unpaid</div></div><button class="btn btn-primary btn-sm">Pay Now</button></div>
+          </div>
+          <div class="inv-item">
+            <div class="inv-left"><div class="inv-num">INV-2025-082</div><div class="inv-name">Cleaning Services Co.</div><div class="inv-meta">Maintenance · Overdue 13 days · Vellakovil</div></div>
+            <div class="inv-right"><span class="badge b-red">Overdue</span><div><div class="inv-amt hl-red">₹92,000</div><div class="inv-due">Unpaid</div></div><button class="btn btn-primary btn-sm">Pay Now</button></div>
+          </div>
+          <div class="inv-item">
+            <div class="inv-left"><div class="inv-num">INV-2025-089</div><div class="inv-name">AC Maintenance Services</div><div class="inv-meta">Maintenance · Due Aug 28 · All Branches</div></div>
+            <div class="inv-right"><span class="badge b-gold">Pending</span><div><div class="inv-amt">₹1,45,000</div><div class="inv-due">Awaiting approval</div></div><button class="btn btn-outline btn-sm">Approve</button></div>
+          </div>
+          <div class="inv-item">
+            <div class="inv-left"><div class="inv-num">INV-2025-076</div><div class="inv-name">Multiplex Projection India</div><div class="inv-meta">Equipment · Paid Aug 4 · Head Office</div></div>
+            <div class="inv-right"><span class="badge b-green">Paid</span><div><div class="inv-amt hl-green">₹2,80,000</div><div class="inv-due">Paid Aug 4</div></div><button class="btn btn-outline btn-sm">View</button></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:10px">
+          <div class="card-title">Add New Invoice</div>
+          <div class="form-grid">
+            <div class="fg"><label>Invoice Number</label><input type="text" placeholder="INV-2025-XXX"></div>
+            <div class="fg"><label>Vendor Name</label><input type="text" placeholder="Vendor name"></div>
+          </div>
+          <div class="form-grid-3">
+            <div class="fg"><label>Category</label><select><option>Concessions</option><option>Maintenance</option><option>VPF</option><option>Equipment</option><option>Advertising</option><option>Other</option></select></div>
+            <div class="fg"><label>Branch</label><select><option>All</option><option>Gobi</option><option>Vellakovil</option><option>Head Office</option></select></div>
+            <div class="fg"><label>Amount (₹)</label><input type="number" placeholder="0"></div>
+          </div>
+          <div class="form-grid">
+            <div class="fg"><label>Invoice Date</label><input type="date"></div>
+            <div class="fg"><label>Due Date</label><input type="date"></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary">Save Invoice</button><button class="btn btn-outline">Clear</button></div>
+        </div>
+      </div>
+
+      <!-- ── STAFF SALARY ── -->
+      <div class="page" id="page-salary">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--primary)"><div class="kpi-lbl">Total Payroll</div><div class="kpi-val">₹4.8L</div><div class="kpi-sub">Aug 2025</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Paid</div><div class="kpi-val">₹4.2L</div><div class="kpi-sub">35 staff</div></div>
+          <div class="kpi" style="--kc:var(--red)"><div class="kpi-lbl">Pending</div><div class="kpi-val">₹60,000</div><div class="kpi-sub">5 staff</div></div>
+          <div class="kpi" style="--kc:#f59e0b"><div class="kpi-lbl">Total Staff</div><div class="kpi-val">40</div><div class="kpi-sub">All branches</div></div>
+        </div>
+        <div class="card">
+          <div class="sec-hdr"><div class="card-title" style="margin:0">Salary Register</div><button class="btn btn-primary btn-sm">+ Add Staff</button></div>
+          <div class="tbl-scroll"><table>
+            <thead><tr><th>Employee</th><th>Branch</th><th>Role</th><th>Basic</th><th>Allowance</th><th>Deduction</th><th>Net Pay</th><th>Month</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>Rajan K.</td><td>Gobi</td><td>Manager</td><td>₹22,000</td><td>₹3,000</td><td>₹2,200</td><td class="hl-blue">₹22,800</td><td>Aug 2025</td><td><span class="badge b-green">Paid</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              <tr><td>Priya M.</td><td>Vellakovil</td><td>Cashier</td><td>₹14,000</td><td>₹1,500</td><td>₹1,400</td><td class="hl-blue">₹14,100</td><td>Aug 2025</td><td><span class="badge b-green">Paid</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              <tr><td>Suresh P.</td><td>Head Office</td><td>Accountant</td><td>₹18,000</td><td>₹2,000</td><td>₹1,800</td><td class="hl-blue">₹18,200</td><td>Aug 2025</td><td><span class="badge b-gold">Pending</span></td><td><button class="btn btn-primary btn-sm">Pay</button></td></tr>
+              <tr><td>Meena S.</td><td>Gobi</td><td>F&B Staff</td><td>₹10,000</td><td>₹1,000</td><td>₹1,000</td><td class="hl-blue">₹10,000</td><td>Aug 2025</td><td><span class="badge b-green">Paid</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── USER MANAGEMENT (OWNER ONLY) ── -->
+      <div class="page" id="page-users">
+        <div class="kpi-grid">
+          <div class="kpi" style="--kc:var(--primary)"><div class="kpi-lbl">Total Users</div><div class="kpi-val" id="totalUsers">1</div><div class="kpi-sub">All roles</div></div>
+          <div class="kpi" style="--kc:var(--green)"><div class="kpi-lbl">Active</div><div class="kpi-val" id="activeUsers">1</div><div class="kpi-sub">Enabled</div></div>
+          <div class="kpi" style="--kc:var(--red)"><div class="kpi-lbl">Disabled</div><div class="kpi-val" id="disabledUsers">0</div><div class="kpi-sub">No access</div></div>
+        </div>
+        <div class="card" style="margin-bottom:10px">
+          <div class="sec-hdr">
+            <div class="card-title" style="margin:0">User Accounts</div>
+            <button class="btn btn-primary btn-sm" onclick="openModal('addUserModal')">+ Add User</button>
+          </div>
+          <div id="userList"></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ── ADD USER MODAL ── -->
+<div class="modal-bg" id="addUserModal">
+  <div class="modal">
+    <div class="modal-title">Add New User <button class="modal-close" onclick="closeModal('addUserModal')">×</button></div>
+    <div class="form-grid">
+      <div class="fg"><label>Full Name</label><input type="text" id="newName" placeholder="Staff full name"></div>
+      <div class="fg"><label>Username</label><input type="text" id="newUsername" placeholder="Login username"></div>
+    </div>
+    <div class="form-grid">
+      <div class="fg"><label>Password</label><input type="password" id="newPassword" placeholder="Set password"></div>
+      <div class="fg"><label>Role</label>
+        <select id="newRole">
+          <option value="owner">Owner</option>
+          <option value="manager">Manager</option>
+          <option value="accountant">Accountant</option>
+          <option value="staff">Staff</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="fg"><label>Branch</label>
+        <select id="newBranch">
+          <option value="all">All Branches</option>
+          <option value="gobi">Gobi</option>
+          <option value="vella">Vellakovil</option>
+          <option value="hq">Head Office</option>
+        </select>
+      </div>
+      <div class="fg"><label>Status</label>
+        <select id="newStatus"><option value="active">Active</option><option value="disabled">Disabled</option></select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+      <button class="btn btn-outline" onclick="closeModal('addUserModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════
+const ROLE_ACCESS = {
+  owner:     ['dashboard','sales','concessions','parking','distributor','advertising','po','purchases','vendors','invoices','salary','users'],
+  manager:   ['dashboard','sales','concessions','parking','advertising','po','purchases'],
+  accountant:['dashboard','sales','parking','distributor','advertising','po','purchases','vendors','invoices','salary'],
+  staff:     ['dashboard','sales','parking']
+};
+
+const NAV_ITEMS = [
+  {id:'dashboard',  icon:'📊', label:'Dashboard',           section:'Overview'},
+  {id:'sales',      icon:'🎟️', label:'Sales & Box Office',   section:'Revenue'},
+  {id:'concessions',icon:'🍿', label:'Concessions / F&B',   section:'Revenue'},
+  {id:'parking',    icon:'🅿️', label:'Parking',             section:'Revenue'},
+  {id:'distributor',icon:'🎞️', label:'Distributor Payments', section:'Payments'},
+  {id:'advertising',icon:'📢', label:'Advertising & VPF',   section:'Payments'},
+  {id:'po',         icon:'📋', label:'Purchase Orders',      section:'Procurement'},
+  {id:'purchases',  icon:'🛒', label:'Purchases',            section:'Procurement'},
+  {id:'vendors',    icon:'🏪', label:'Vendor Payments',      section:'Finance'},
+  {id:'invoices',   icon:'🧾', label:'Invoice Management',   section:'Finance', badge:3},
+  {id:'salary',     icon:'👥', label:'Staff Salary',         section:'Finance'},
+  {id:'users',      icon:'⚙️', label:'User Management',      section:'Admin'},
+];
+
+// Users stored in localStorage
+function getUsers() {
+  const u = localStorage.getItem('cm_users');
+  if (u) return JSON.parse(u);
+  const def = [{id:1,name:'Admin Owner',username:'admin',password:'admin123',role:'owner',branch:'all',status:'active'}];
+  localStorage.setItem('cm_users',JSON.stringify(def));
+  return def;
+}
+function saveUsers(u) { localStorage.setItem('cm_users',JSON.stringify(u)); }
+
+let currentUser = null;
+
+// ══════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const users = getUsers();
+  const match = users.find(x => x.username===u && x.password===p && x.status==='active');
+  if (!match) {
+    document.getElementById('loginError').style.display='block';
+    return;
+  }
+  currentUser = match;
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  buildNav();
+  updateUserDisplay();
+  showPage('dashboard');
+  setTimeout(initDashCharts,100);
+}
+
+document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginError').style.display='none';
+}
+
+function updateUserDisplay() {
+  if(!currentUser) return;
+  document.getElementById('sbAvatar').textContent = currentUser.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('sbUname').textContent = currentUser.name;
+  const roleLabels = {owner:'Owner',manager:'Manager',accountant:'Accountant',staff:'Staff'};
+  document.getElementById('sbUrole').textContent = roleLabels[currentUser.role] || currentUser.role;
+}
+
+// ══════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════
+function buildNav() {
+  const allowed = ROLE_ACCESS[currentUser.role] || [];
+  const nav = document.getElementById('sbNav');
+  nav.innerHTML = '';
+  let lastSection = '';
+  NAV_ITEMS.forEach(item => {
+    if(!allowed.includes(item.id)) return;
+    if(item.section !== lastSection) {
+      nav.innerHTML += `<div class="sb-section-label">${item.section}</div>`;
+      lastSection = item.section;
+    }
+    nav.innerHTML += `<button class="sb-item" id="nav-${item.id}" onclick="showPage('${item.id}')">
+      <span class="sb-icon">${item.icon}</span>${item.label}
+      ${item.badge ? `<span class="sb-badge">${item.badge}</span>` : ''}
+    </button>`;
+  });
+}
+
+function showPage(id) {
+  const allowed = ROLE_ACCESS[currentUser.role] || [];
+  if(!allowed.includes(id)) return;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  const pg = document.getElementById('page-'+id);
+  if(pg) pg.classList.add('active');
+  const nb = document.getElementById('nav-'+id);
+  if(nb) nb.classList.add('active');
+  const item = NAV_ITEMS.find(n=>n.id===id);
+  document.getElementById('tbTitle').textContent = item ? item.label : id;
+  if(window.innerWidth<=768) toggleSidebar();
+  setTimeout(()=>initPageCharts(id),80);
+  if(id==='users') renderUsers();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+// ══════════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ══════════════════════════════════════════════
+// USER MANAGEMENT
+// ══════════════════════════════════════════════
+const roleColors = {owner:'b-blue',manager:'b-green',accountant:'b-purple',staff:'b-gray'};
+const roleLabels = {owner:'Owner',manager:'Manager',accountant:'Accountant',staff:'Staff'};
+const branchLabels = {all:'All Branches',gobi:'Gobi',vella:'Vellakovil',hq:'Head Office'};
+
+function renderUsers() {
+  const users = getUsers();
+  const active = users.filter(u=>u.status==='active').length;
+  document.getElementById('totalUsers').textContent = users.length;
+  document.getElementById('activeUsers').textContent = active;
+  document.getElementById('disabledUsers').textContent = users.length - active;
+  const list = document.getElementById('userList');
+  list.innerHTML = users.map(u=>`
+    <div class="user-card">
+      <div class="user-av">${u.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()}</div>
+      <div class="user-info">
+        <div class="user-n">${u.name} <span style="font-size:11px;color:var(--muted);font-weight:400">@${u.username}</span></div>
+        <div class="user-r">${branchLabels[u.branch]||u.branch}</div>
+      </div>
+      <div class="user-status">
+        <span class="badge ${roleColors[u.role]||'b-gray'}">${roleLabels[u.role]||u.role}</span>
+        <span class="badge ${u.status==='active'?'b-green':'b-red'}">${u.status==='active'?'Active':'Disabled'}</span>
+        ${currentUser.role==='owner'&&u.id!==currentUser.id ? `
+          <button class="btn btn-outline btn-sm" onclick="toggleUserStatus(${u.id})">${u.status==='active'?'Disable':'Enable'}</button>
+          <button class="btn btn-outline btn-sm" onclick="resetPassword(${u.id})">Reset PW</button>
+          <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid #fecaca" onclick="deleteUser(${u.id})">Delete</button>
+        ` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function saveUser() {
+  const name = document.getElementById('newName').value.trim();
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value;
+  const role = document.getElementById('newRole').value;
+  const branch = document.getElementById('newBranch').value;
+  const status = document.getElementById('newStatus').value;
+  if(!name||!username||!password){alert('Please fill all fields.');return;}
+  const users = getUsers();
+  if(users.find(u=>u.username===username)){alert('Username already exists.');return;}
+  const newUser = {id:Date.now(),name,username,password,role,branch,status};
+  users.push(newUser);
+  saveUsers(users);
+  closeModal('addUserModal');
+  ['newName','newUsername','newPassword'].forEach(id=>document.getElementById(id).value='');
+  renderUsers();
+  alert(`User "${name}" created successfully.`);
+}
+
+function toggleUserStatus(id) {
+  const users = getUsers();
+  const u = users.find(x=>x.id===id);
+  if(u) { u.status = u.status==='active'?'disabled':'active'; saveUsers(users); renderUsers(); }
+}
+
+function deleteUser(id) {
+  if(!confirm('Delete this user? This cannot be undone.')) return;
+  const users = getUsers().filter(u=>u.id!==id);
+  saveUsers(users);
+  r
